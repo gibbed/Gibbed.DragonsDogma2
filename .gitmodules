@@ -1,0 +1,8 @@
+[submodule "projects/Gibbed.ProjectData"]
+	path = projects/Gibbed.ProjectData
+	url = https://github.com/gibbed/Gibbed.ProjectData.git
+	branch = main
+[submodule "projects/NDesk.Options"]
+	path = projects/NDesk.Options
+	url = https://github.com/gibbed/NDesk.Options.git
+	branch = main
