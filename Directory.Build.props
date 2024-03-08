@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <GibbedDragonsDogma2_TargetFrameworksToBuild>net48</GibbedDragonsDogma2_TargetFrameworksToBuild>
+    <GibbedMemory_TargetFrameworksToBuild>net48</GibbedMemory_TargetFrameworksToBuild>
+    <GibbedProjectData_TargetFrameworksToBuild>net48</GibbedProjectData_TargetFrameworksToBuild>
+    <NDeskOptions_TargetFrameworksToBuild>net48</NDeskOptions_TargetFrameworksToBuild>
+  </PropertyGroup>
+</Project>

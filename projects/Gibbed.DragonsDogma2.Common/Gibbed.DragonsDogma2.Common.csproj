@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Company>Gibbed</Company>
+    <Authors>Gibbed</Authors>
+    <Description>https://gib.me/</Description>
+    <Copyright>Copyright © Gibbed 2024</Copyright>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>9.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GibbedDragonsDogma2_TargetFrameworksToBuild)' == '' ">
+    <GibbedSleepingDogs_TargetFrameworksToBuild>$(TargetFrameworksToBuild)</GibbedSleepingDogs_TargetFrameworksToBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GibbedDragonsDogma2_TargetFrameworksToBuild)' == '' ">
+    <TargetFrameworks>net48</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GibbedDragonsDogma2_TargetFrameworksToBuild)' != '' ">
+    <TargetFrameworks>$(GibbedDragonsDogma2_TargetFrameworksToBuild)</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2" />
+    <PackageReference Include="K4os.Hash.xxHash" Version="1.0.8" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Gibbed.Memory\Gibbed.Memory.csproj" />
+  </ItemGroup>
+</Project>

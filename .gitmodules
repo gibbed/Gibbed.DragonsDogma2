@@ -10,3 +10,7 @@
 	path = projects/Gibbed.Memory
 	url = https://github.com/gibbed/Gibbed.Memory.git
 	branch = main
+[submodule "configs/Dragon's Dogma 2 Character Creator & Storage/files"]
+	path = configs/Dragon's Dogma 2 Character Creator & Storage/files
+	url = https://github.com/gibbed/DD2CCS-File-Lists.git
+	branch = main
