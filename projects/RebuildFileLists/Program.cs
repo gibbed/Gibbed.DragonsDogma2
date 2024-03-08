@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gibbed.DragonsDogma2.FileFormats;
+using NaturalSort.Extension;
 using NDesk.Options;
 
 namespace RebuildFileLists
@@ -181,7 +182,7 @@ namespace RebuildFileLists
                     nameLookupNew[nameHash] = name;
                 }
 
-                names.Sort();
+                names.Sort(new NaturalSortComparer(StringComparison.OrdinalIgnoreCase));
 
                 var outputParentPath = Path.GetDirectoryName(outputPath);
                 if (string.IsNullOrEmpty(outputParentPath) == true)

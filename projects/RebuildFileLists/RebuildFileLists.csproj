@@ -23,6 +23,9 @@
     <OutputPath>..\..\bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="NaturalSort.Extension" Version="4.2.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Gibbed.DragonsDogma2.FileFormats\Gibbed.DragonsDogma2.FileFormats.csproj" />
     <ProjectReference Include="..\Gibbed.Memory\Gibbed.Memory.csproj" />
     <ProjectReference Include="..\Gibbed.ProjectData\Gibbed.ProjectData.csproj" />
