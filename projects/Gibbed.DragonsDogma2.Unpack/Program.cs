@@ -138,7 +138,16 @@ namespace Gibbed.DragonsDogma2.Unpack
                     var resourceName = hashes[resource.NameHash];
                     if (string.IsNullOrEmpty(resourceName) == true)
                     {
-                        resourceName = $"__UNKNOWN/{resource.NameHash:X16}";
+                        var guessResource = resource;
+                        var guessDecompress = GetDecompress(guessResource);
+                        guessResource.DataSizeUncompressed = Math.Min(guessResource.DataSizeUncompressed, FileDetection.BestGuessLength);
+                        using MemoryStream guessData = new();
+                        guessDecompress(guessResource, input, guessData);
+                        guessData.Flush();
+
+                        guessData.Position = 0;
+                        var extension = FileDetection.Guess(guessData, guessData.Length, resource.DataSizeUncompressed);
+                        resourceName = $"__UNKNOWN/{resource.NameHash:X16}{extension}";
                     }
 
                     if (filter != null && filter.IsMatch(resourceName) == false)
