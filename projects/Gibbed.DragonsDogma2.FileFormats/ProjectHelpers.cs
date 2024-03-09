@@ -68,9 +68,14 @@ namespace Gibbed.DragonsDogma2.FileFormats
             return Path.Combine(binPath, "..", "configs", projectName, "project.json");
         }
 
+        public static string Modifier(string s)
+        {
+            return s.Replace(@"\", @"/").ToLowerInvariant();
+        }
+
         public static ProjectData.HashList<ulong> LoadListsFileNames(this ProjectData.Project project)
         {
-            return project.LoadLists("*.filelist", s => s.HashFileName(), s => s.Replace('\\', '/'));
+            return project.LoadLists("*.filelist", s => s.HashFileName(), Modifier);
         }
     }
 }
