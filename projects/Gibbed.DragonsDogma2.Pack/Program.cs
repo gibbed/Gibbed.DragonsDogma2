@@ -47,7 +47,7 @@ namespace Gibbed.DragonsDogma2.Pack
 
             OptionSet options = new()
             {
-                { "c|compress", "compress data with LZO1x", v => compress = v != null },
+                { "c|compress", "compress resources", v => compress = v != null },
                 { "e|encrypt", "encrypt resource headers", v => encryptResourceHeaders = v != null },
                 { "v|verbose", "be verbose", v => verbose = v != null },
                 { "h|help", "show this message and exit", v => showHelp = v != null },
