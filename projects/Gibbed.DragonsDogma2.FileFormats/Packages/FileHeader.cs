@@ -30,7 +30,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
     {
         public const uint Signature = 0x414B504B; // 'AKPK'
         
-        public const int Size = 16;
+        public const int HeaderSize = 16;
 
         public Endian Endian;
         public FileFlags Flags;

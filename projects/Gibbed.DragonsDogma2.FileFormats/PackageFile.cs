@@ -35,6 +35,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
         public const uint Signature = FileHeader.Signature;
 
         private readonly List<ResourceHeader> _Resources;
+        private readonly List<BlockHeader> _Blocks;
 
         public PackageFile()
         {
@@ -44,12 +45,35 @@ namespace Gibbed.DragonsDogma2.FileFormats
         public Endian Endian { get; set; }
         public bool EncryptResourceHeaders { get; set; }
         public List<ResourceHeader> Resources => this._Resources;
+        public UnknownHeader? Unknown { get; set; }
+        public uint BlockSize { get; set; }
+        public List<BlockHeader> Blocks => this._Blocks;
 
         public int EstimateHeaderSize()
         {
-            // TODO(gibbed): other tables
-            return FileHeader.Size
-                + this._Resources.Count * ResourceHeader.Size;
+            var resourceHeadersSize = this._Resources.Count * ResourceHeader.HeaderSize;
+
+            var headerSize = FileHeader.HeaderSize;
+
+            headerSize += resourceHeadersSize;
+
+            if (this.Unknown != null)
+            {
+                headerSize += UnknownHeader.HeaderSize;
+            }
+
+            if (this.Blocks.Count > 0)
+            {
+                headerSize += BlockTableHeader.HeaderSize;
+                headerSize += BlockHeader.HeaderSize * this.Blocks.Count;
+            }
+
+            if (this.EncryptResourceHeaders == true)
+            {
+                headerSize += 128;
+            }
+
+            return headerSize;
         }
 
         public void Serialize(Stream output)
@@ -58,28 +82,49 @@ namespace Gibbed.DragonsDogma2.FileFormats
 
             FileFlags fileFlags = FileFlags.None;
 
-            var entryHeadersSize = this._Resources.Count * ResourceHeader.Size;
-
-            var headerSize = FileHeader.Size + entryHeadersSize;
+            var headerSize = this.EstimateHeaderSize();
             var headerBytes = new byte[headerSize];
 
-            SimpleBufferWriter<byte> entryHeadersWriter = new(headerBytes, FileHeader.Size, entryHeadersSize);
-            foreach (var entryHeader in this._Resources.OrderBy(eh => eh.NameHash))
+            SimpleBufferWriter<byte> headerWriter = new(headerBytes, FileHeader.HeaderSize, headerSize);
+
+            int resourceHeadersSize = ResourceHeader.HeaderSize * this._Resources.Count;
+            foreach (var resourceHeader in this._Resources.OrderBy(eh => eh.NameHash))
             {
-                entryHeader.Write(entryHeadersWriter, endian);
+                resourceHeader.Write(headerWriter, endian);
+            }
+
+            if (this.Unknown != null)
+            {
+                fileFlags |= FileFlags.Unknown2;
+                this.Unknown.Value.Write(headerWriter, endian);
+            }
+
+            if (this.Blocks.Count > 0)
+            {
+                fileFlags |= FileFlags.Blocks;
+                BlockTableHeader blockTableHeader;
+                blockTableHeader.BlockSize = this.BlockSize;
+                blockTableHeader.BlockCount = this.Blocks.Count;
+                blockTableHeader.Write(headerWriter, endian);
+                foreach (var blockHeader in this.Blocks)
+                {
+                    blockHeader.Write(headerWriter, endian);
+                }
             }
 
             if (this.EncryptResourceHeaders == true)
             {
-                var encryptionKeyBytes = new byte[128];
+                fileFlags |= FileFlags.EncryptResourceHeaders;
+
+                var keyBytes = new byte[128];
 
                 Random random = new();
-                random.NextBytes(encryptionKeyBytes);
+                random.NextBytes(keyBytes);
 
-                var bogocrypt = Bogocrypt.Create(encryptionKeyBytes);
-                bogocrypt.Xor(headerBytes.AsSpan(FileHeader.Size));
+                var bogocrypt = Bogocrypt.Create(keyBytes);
+                bogocrypt.Xor(headerBytes.AsSpan(FileHeader.HeaderSize, resourceHeadersSize));
 
-                fileFlags |= FileFlags.EncryptResourceHeaders;
+                headerWriter.WriteBytes(keyBytes);
             }
 
             FileHeader fileHeader;
@@ -88,15 +133,15 @@ namespace Gibbed.DragonsDogma2.FileFormats
             fileHeader.ResourceCount = this._Resources.Count;
             fileHeader.Unknown = 0;
 
-            SimpleBufferWriter<byte> fileHeaderWriter = new(headerBytes, 0, FileHeader.Size);
-            fileHeader.Write(fileHeaderWriter);
+            headerWriter.Reset();
+            fileHeader.Write(headerWriter);
 
             output.Write(headerBytes, 0, headerSize);
         }
 
         public void Deserialize(Stream input)
         {
-            var header = input.ReadToInstance(FileHeader.Size, FileHeader.Read);
+            var header = input.ReadToInstance(FileHeader.HeaderSize, FileHeader.Read);
             var endian = header.Endian;
 
             var unknownHeaderFlags = header.Flags & ~FileFlags.Known;
@@ -105,7 +150,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 throw new FormatException();
             }
 
-            var resourceHeadersSize = header.ResourceCount * ResourceHeader.Size;
+            var resourceHeadersSize = header.ResourceCount * ResourceHeader.HeaderSize;
             Span<byte> resourceHeaderBuffer = resourceHeadersSize < 1024
                 ? stackalloc byte[resourceHeadersSize]
                 : new byte[resourceHeadersSize];
@@ -123,20 +168,41 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 throw new NotImplementedException();
             }
 
+            UnknownHeader? unknownHeader;
             if ((header.Flags & FileFlags.Unknown2) != 0)
             {
-                // int
-                // byte
-                // byte
-                throw new NotImplementedException();
+                unknownHeader = input.ReadToInstance(UnknownHeader.HeaderSize, endian, UnknownHeader.Read);
+            }
+            else
+            {
+                unknownHeader = null;
             }
 
-            if ((header.Flags & FileFlags.Unknown1) != 0)
+            uint blockSize;
+            BlockHeader[] blockHeaders;
+
+            if ((header.Flags & FileFlags.Blocks) != 0)
             {
-                // uint
-                // uint unknown_count
-                // byte[unknown_count * 8]
-                throw new NotImplementedException();
+                var blockTableHeader = input.ReadToInstance(BlockTableHeader.HeaderSize, endian, BlockTableHeader.Read);
+
+                var blockHeadersSize = blockTableHeader.BlockCount * BlockHeader.HeaderSize;
+                Span<byte> blockHeaderBuffer = blockHeadersSize < 1024
+                    ? stackalloc byte[blockHeadersSize]
+                    : new byte[blockHeadersSize];
+                input.ReadToSpan(blockHeaderBuffer);
+
+                blockSize = blockTableHeader.BlockSize;
+                blockHeaders = new BlockHeader[blockTableHeader.BlockCount];
+                int blockHeaderOffset = 0;
+                for (int i = 0; i < header.ResourceCount; i++)
+                {
+                    blockHeaders[i] = BlockHeader.Read(resourceHeaderBuffer, ref blockHeaderOffset, endian);
+                }
+            }
+            else
+            {
+                blockSize = default;
+                blockHeaders = null;
             }
 
             if ((header.Flags & FileFlags.EncryptResourceHeaders) != 0)
@@ -155,10 +221,18 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 resourceHeaders[i] = ResourceHeader.Read(resourceHeaderBuffer, ref resourceHeaderOffset, endian);
             }
 
+            this._Resources.Clear();
+            this._Blocks.Clear();
+
             this.Endian = endian;
             this.EncryptResourceHeaders = (header.Flags & FileFlags.EncryptResourceHeaders) != 0;
-            this._Resources.Clear();
             this._Resources.AddRange(resourceHeaders);
+            this.Unknown = unknownHeader;
+            this.BlockSize = blockSize;
+            if (blockHeaders != null)
+            {
+                this._Blocks.AddRange(blockHeaders);
+            }
         }
     }
 }

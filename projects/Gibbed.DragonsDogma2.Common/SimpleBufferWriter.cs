@@ -47,6 +47,11 @@ namespace Gibbed.DragonsDogma2.Common
         public int Capacity => this._Count;
         public int FreeCapacity => this._Count - this._TotalWriteIndex;
 
+        public void Reset()
+        {
+            this._WriteIndex = this._TotalWriteIndex = 0;
+        }
+
         public void Clear()
         {
             this._Buffer.AsSpan(this._Count, this._TotalWriteIndex).Clear();

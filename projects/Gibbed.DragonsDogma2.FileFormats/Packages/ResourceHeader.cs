@@ -28,7 +28,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
     public struct ResourceHeader
     {
-        public const int Size = 48;
+        public const int HeaderSize = 48;
 
         public ulong NameHash;
         public long DataOffset;

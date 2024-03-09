@@ -21,32 +21,38 @@
  */
 
 using System;
+using System.Buffers;
+using Gibbed.Memory;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    [Flags]
-    public enum FileFlags : ushort
+    public struct UnknownHeader
     {
-        None = 0,
+        public const int HeaderSize = 6;
 
-        Unknown0 = 1 << 0,
-        Blocks = 1 << 1,
-        Unknown2 = 1 << 2,
-        EncryptResourceHeaders = 1 << 3,
-        Unknown4 = 1 << 4,
-        Unknown5 = 1 << 5,
-        Unknown6 = 1 << 6,
-        Unknown7 = 1 << 7,
+        public uint Unknown0;
+        public byte Unknown4;
+        public byte Unknown5;
 
-        Unknown8 = 1 << 8,
-        Unknown9 = 1 << 9,
-        Unknown10 = 1 << 10,
-        Unknown11 = 1 << 11,
-        Unknown12 = 1 << 12,
-        Unknown13 = 1 << 13,
-        Unknown14 = 1 << 14,
-        Unknown15 = 1 << 15,
+        internal static UnknownHeader Read(ReadOnlySpan<byte> span, ref int index, Endian endian)
+        {
+            UnknownHeader instance;
+            instance.Unknown0 = span.ReadValueU32(ref index, endian);
+            instance.Unknown4 = span.ReadValueU8(ref index);
+            instance.Unknown5 = span.ReadValueU8(ref index);
+            return instance;
+        }
 
-        Known = Unknown0 | Blocks | Unknown2 | EncryptResourceHeaders,
+        internal static void Write(UnknownHeader instance, IBufferWriter<byte> writer, Endian endian)
+        {
+            writer.WriteValueU32(instance.Unknown0, endian);
+            writer.WriteValueU8(instance.Unknown4);
+            writer.WriteValueU8(instance.Unknown5);
+        }
+
+        internal void Write(IBufferWriter<byte> writer, Endian endian)
+        {
+            Write(this, writer, endian);
+        }
     }
 }

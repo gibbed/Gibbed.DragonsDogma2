@@ -21,32 +21,35 @@
  */
 
 using System;
+using System.Buffers;
+using Gibbed.Memory;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    [Flags]
-    public enum FileFlags : ushort
+    public struct BlockTableHeader
     {
-        None = 0,
+        public const int HeaderSize = 8;
 
-        Unknown0 = 1 << 0,
-        Blocks = 1 << 1,
-        Unknown2 = 1 << 2,
-        EncryptResourceHeaders = 1 << 3,
-        Unknown4 = 1 << 4,
-        Unknown5 = 1 << 5,
-        Unknown6 = 1 << 6,
-        Unknown7 = 1 << 7,
+        public uint BlockSize;
+        public int BlockCount;
 
-        Unknown8 = 1 << 8,
-        Unknown9 = 1 << 9,
-        Unknown10 = 1 << 10,
-        Unknown11 = 1 << 11,
-        Unknown12 = 1 << 12,
-        Unknown13 = 1 << 13,
-        Unknown14 = 1 << 14,
-        Unknown15 = 1 << 15,
+        internal static BlockTableHeader Read(ReadOnlySpan<byte> span, ref int index, Endian endian)
+        {
+            BlockTableHeader instance;
+            instance.BlockSize = span.ReadValueU32(ref index, endian);
+            instance.BlockCount = span.ReadValueS32(ref index, endian);
+            return instance;
+        }
 
-        Known = Unknown0 | Blocks | Unknown2 | EncryptResourceHeaders,
+        internal static void Write(BlockTableHeader instance, IBufferWriter<byte> writer, Endian endian)
+        {
+            writer.WriteValueU32(instance.BlockSize, endian);
+            writer.WriteValueS32(instance.BlockCount, endian);
+        }
+
+        internal void Write(IBufferWriter<byte> writer, Endian endian)
+        {
+            Write(this, writer, endian);
+        }
     }
 }

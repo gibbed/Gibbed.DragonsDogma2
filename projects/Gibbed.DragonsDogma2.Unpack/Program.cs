@@ -125,6 +125,11 @@ namespace Gibbed.DragonsDogma2.Unpack
                 PackageFile package = new();
                 package.Deserialize(input);
 
+                if (package.Blocks.Count > 0)
+                {
+                    throw new NotImplementedException("support for blocks not yet implemented");
+                }
+
                 var groups = package.Resources.GroupBy(rh => rh.UnknownHash).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToDictionary(g => g.Key, g => g.ToList());
 
                 long current = 0;

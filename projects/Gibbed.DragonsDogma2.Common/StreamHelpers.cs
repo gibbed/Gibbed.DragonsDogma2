@@ -43,7 +43,9 @@ namespace Gibbed.DragonsDogma2.Common
 
         public static T ReadToInstance<T>(this Stream input, int size, ReadToInstanceDelegate<T> reader)
         {
-            Span<byte> span = stackalloc byte[size];
+            Span<byte> span = size < 1024
+                ? stackalloc byte[size]
+                : new byte[size];
             var read = input.Read(span);
             if (read != size)
             {
@@ -55,7 +57,9 @@ namespace Gibbed.DragonsDogma2.Common
 
         public static T ReadToInstance<T>(this Stream input, int size, Endian endian, ReadToInstanceEndianDelegate<T> reader)
         {
-            Span<byte> span = stackalloc byte[size];
+            Span<byte> span = size < 1024
+                ? stackalloc byte[size]
+                : new byte[size];
             var read = input.Read(span);
             if (read != size)
             {
