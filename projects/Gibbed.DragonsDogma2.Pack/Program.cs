@@ -205,7 +205,11 @@ namespace Gibbed.DragonsDogma2.Pack
                     ResourceHeader resource;
                     using (var input = File.OpenRead(pendingEntry.FullPath))
                     {
-                        resource = Pack(pendingEntry.NameHash, input, input.Length, compress, output);
+                        resource = Pack(
+                            pendingEntry.NameHash,
+                            input, input.Length,
+                            ShouldCompress(pendingEntry.Name, compress),
+                            output);
                     }
                     package.Resources.Add(resource);
                 }
@@ -214,6 +218,14 @@ namespace Gibbed.DragonsDogma2.Pack
                 package.Serialize(output);
             }
         }
+
+        private static bool ShouldCompress(string name, bool compress) => ExtensionHelper.GetExtension(name) switch
+        {
+            ".mov" => false,
+            ".sbnk" => false,
+            ".spck" => false,
+            _ => compress,
+        };
 
         private static ResourceHeader Pack(ulong nameHash, Stream input, long length, bool compress, Stream output)
         {
