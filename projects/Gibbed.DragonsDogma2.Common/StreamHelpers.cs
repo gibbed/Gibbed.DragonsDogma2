@@ -24,6 +24,7 @@ using System;
 using System.IO;
 using CommunityToolkit.HighPerformance;
 using Gibbed.Memory;
+using XXH64 = K4os.Hash.xxHash.XXH64;
 
 namespace Gibbed.DragonsDogma2.Common
 {
@@ -67,6 +68,72 @@ namespace Gibbed.DragonsDogma2.Common
             }
             int dummy = 0;
             return reader(span, ref dummy, endian);
+        }
+
+        public static void CopyTo(this Stream input, long size, Stream output, int bufferSize)
+        {
+            long left = size;
+            var buffer = new byte[bufferSize];
+            while (left > 0)
+            {
+                var blockSize = (int)Math.Min(left, bufferSize);
+                var read = input.Read(buffer, 0, blockSize);
+                if (read != blockSize)
+                {
+                    throw new EndOfStreamException();
+                }
+                output.Write(buffer, 0, blockSize);
+                left -= blockSize;
+            }
+        }
+
+        public static void CopyTo(this Stream input, long size, Stream output)
+        {
+            CopyTo(input, size, output, 0x40000);
+        }
+
+        public static void CopyTo(
+            this Stream input, long size,
+            uint hashSeed,
+            int bufferSize,
+            Stream output,
+            out ulong hash)
+        {
+            XXH64.State state = default;
+            XXH64.Reset(ref state, hashSeed);
+            long left = size;
+            var buffer = new byte[bufferSize];
+            while (left > 0)
+            {
+                var blockSize = (int)Math.Min(left, bufferSize);
+                var readSize = input.Read(buffer, 0, blockSize);
+                if (readSize != blockSize)
+                {
+                    throw new EndOfStreamException();
+                }
+                XXH64.Update(ref state, new ReadOnlySpan<byte>(buffer, 0, blockSize));
+                output.Write(buffer, 0, blockSize);
+                left -= blockSize;
+            }
+            hash = XXH64.Digest(state);
+        }
+
+        public static void CopyTo(
+            this Stream input,
+            uint hashSeed,
+            Stream output,
+            out ulong hash)
+        {
+            CopyTo(input, input.Length, hashSeed, 0x40000, output, out hash);
+        }
+
+        public static void CopyTo(
+            this Stream input, long size,
+            uint hashSeed,
+            Stream output,
+            out ulong hash)
+        {
+            CopyTo(input, size, hashSeed, 0x40000, output, out hash);
         }
     }
 }

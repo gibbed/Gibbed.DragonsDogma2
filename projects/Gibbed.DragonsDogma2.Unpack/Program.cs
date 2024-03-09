@@ -26,7 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Gibbed.DragonsDogma2.Common.Hashing;
+using Gibbed.DragonsDogma2.Common;
 using Gibbed.DragonsDogma2.FileFormats;
 using Gibbed.DragonsDogma2.FileFormats.Packages;
 using NDesk.Options;
@@ -44,7 +44,7 @@ namespace Gibbed.DragonsDogma2.Unpack
             bool verbose = false;
             bool showHelp = false;
 
-            var options = new OptionSet()
+            OptionSet options = new()
             {
                 { "p|project=", "set project name", v => projectName = v },
                 { "f|filter=", "only extract files using pattern", v => filterPattern = v },
@@ -201,34 +201,12 @@ namespace Gibbed.DragonsDogma2.Unpack
             }
         }
 
-        private static void CopyStream(Stream input, long size, Stream output, int buffer)
-        {
-            long left = size;
-            var data = new byte[buffer];
-            while (left > 0)
-            {
-                var block = (int)Math.Min(left, buffer);
-                var read = input.Read(data, 0, block);
-                if (read != block)
-                {
-                    throw new EndOfStreamException();
-                }
-                output.Write(data, 0, block);
-                left -= block;
-            }
-        }
-
-        private static void CopyStream(Stream input, long size, Stream output)
-        {
-            CopyStream(input, size, output, 0x40000);
-        }
-
         delegate void DecompressDelegate(ResourceHeader resource, Stream input, Stream output);
 
         private static void DecompressNone(ResourceHeader resource, Stream input, Stream output)
         {
             input.Position = resource.DataOffset;
-            CopyStream(input, resource.DataSizeUncompressed, output);
+            input.CopyTo(resource.DataSizeUncompressed, output);
         }
 
         private static void DecompressDeflate(ResourceHeader resource, Stream input, Stream output)
@@ -236,7 +214,7 @@ namespace Gibbed.DragonsDogma2.Unpack
             input.Position = resource.DataOffset;
             using InflaterInputStream zlib = new(input, new(true));
             zlib.IsStreamOwner = false;
-            CopyStream(zlib, resource.DataSizeUncompressed, output);
+            zlib.CopyTo(resource.DataSizeUncompressed, output);
         }
     }
 }
