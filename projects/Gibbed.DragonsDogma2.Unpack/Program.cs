@@ -38,15 +38,17 @@ namespace Gibbed.DragonsDogma2.Unpack
     {
         public static void Main(string[] args)
         {
-            string filterPattern = null;
             string projectName = null;
+            string filterPattern = null;
+            bool overwriteFiles = false;
             bool verbose = false;
             bool showHelp = false;
 
             var options = new OptionSet()
             {
-                { "f|filter=", "only extract files using pattern", v => filterPattern = v },
                 { "p|project=", "set project name", v => projectName = v },
+                { "f|filter=", "only extract files using pattern", v => filterPattern = v },
+                { "o|overwrite", "overwrite existing files", v => overwriteFiles = v != null },
                 { "v|verbose", "be verbose (list files)", v => verbose = v != null },
                 { "h|help", "show this message and exit", v => showHelp = v != null },
             };
@@ -144,6 +146,13 @@ namespace Gibbed.DragonsDogma2.Unpack
                         continue;
                     }
 
+                    var outputPath = Path.Combine(outputBasePath, resourceName.Replace('/', Path.DirectorySeparatorChar));
+
+                    if (overwriteFiles == false && File.Exists(outputPath) == true)
+                    {
+                        continue;
+                    }
+
                     if (verbose == true)
                     {
                         Console.WriteLine(
@@ -152,8 +161,6 @@ namespace Gibbed.DragonsDogma2.Unpack
                             total,
                             resourceName);
                     }
-
-                    var outputPath = Path.Combine(outputBasePath, resourceName.Replace('/', Path.DirectorySeparatorChar));
 
                     var outputParentPath = Path.GetDirectoryName(outputPath);
                     if (string.IsNullOrEmpty(outputParentPath) == false)
