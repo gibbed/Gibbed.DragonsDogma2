@@ -40,6 +40,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
         public PackageFile()
         {
             this._Resources = new();
+            this._Blocks = new();
         }
 
         public Endian Endian { get; set; }
@@ -49,31 +50,44 @@ namespace Gibbed.DragonsDogma2.FileFormats
         public uint BlockSize { get; set; }
         public List<BlockHeader> Blocks => this._Blocks;
 
-        public int EstimateHeaderSize()
+        public static int EstimateHeaderSize(
+            int resourceCount,
+            bool hasUnknown,
+            int blockCount,
+            bool encryptResourceHeaders)
         {
-            var resourceHeadersSize = this._Resources.Count * ResourceHeader.HeaderSize;
+            var resourceHeadersSize = resourceCount * ResourceHeader.HeaderSize;
 
             var headerSize = FileHeader.HeaderSize;
 
             headerSize += resourceHeadersSize;
 
-            if (this.Unknown != null)
+            if (hasUnknown == true)
             {
                 headerSize += UnknownHeader.HeaderSize;
             }
 
-            if (this.Blocks.Count > 0)
+            if (blockCount > 0)
             {
                 headerSize += BlockTableHeader.HeaderSize;
-                headerSize += BlockHeader.HeaderSize * this.Blocks.Count;
+                headerSize += BlockHeader.HeaderSize * blockCount;
             }
 
-            if (this.EncryptResourceHeaders == true)
+            if (encryptResourceHeaders == true)
             {
                 headerSize += 128;
             }
 
             return headerSize;
+        }
+
+        public int EstimateHeaderSize()
+        {
+            return EstimateHeaderSize(
+                this._Resources.Count,
+                this.Unknown != null,
+                this._Blocks.Count,
+                this.EncryptResourceHeaders);
         }
 
         public void Serialize(Stream output)
@@ -85,7 +99,8 @@ namespace Gibbed.DragonsDogma2.FileFormats
             var headerSize = this.EstimateHeaderSize();
             var headerBytes = new byte[headerSize];
 
-            SimpleBufferWriter<byte> headerWriter = new(headerBytes, FileHeader.HeaderSize, headerSize);
+            SimpleBufferWriter<byte> headerWriter = new(headerBytes, 0, headerSize);
+            headerWriter.Advance(FileHeader.HeaderSize);
 
             int resourceHeadersSize = ResourceHeader.HeaderSize * this._Resources.Count;
             foreach (var resourceHeader in this._Resources.OrderBy(eh => eh.NameHash))
