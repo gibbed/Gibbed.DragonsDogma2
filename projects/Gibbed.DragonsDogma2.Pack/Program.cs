@@ -117,19 +117,7 @@ namespace Gibbed.DragonsDogma2.Pack
                     pendingEntry.PartPath = partPath;
 
                     var pieces = partPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    int index = 0;
-
-                    if (index >= pieces.Length)
-                    {
-                        continue;
-                    }
-
-                    if (index >= pieces.Length)
-                    {
-                        continue;
-                    }
-
-                    if (pieces[index].ToUpperInvariant() == "__UNKNOWN")
+                    if (pieces.Length == 2 && pieces[0].ToUpperInvariant() == "__UNKNOWN")
                     {
                         var partName = Path.GetFileNameWithoutExtension(partPath);
 
@@ -152,19 +140,17 @@ namespace Gibbed.DragonsDogma2.Pack
                     }
                     else
                     {
-                        pendingEntry.Name = string.Join("/", pieces.Skip(index).ToArray()).ToLowerInvariant();
-                        pendingEntry.NameHash = ProjectHelpers.Modifier(pendingEntry.Name).HashFileName();
+                        var name = pendingEntry.Name = ProjectHelpers.Modifier(string.Join("/", pieces));
+                        pendingEntry.NameHash = name.HashFileName();
                     }
 
-                    if (pendingEntries.ContainsKey(pendingEntry.NameHash) == true)
+                    if (pendingEntries.TryGetValue(pendingEntry.NameHash, out var previousPendingEntry) == true)
                     {
                         Console.WriteLine($"Ignoring duplicate of {pendingEntry.NameHash:X16}: {partPath}");
-
                         if (verbose == true)
                         {
-                            Console.WriteLine($"  Previously added from: {pendingEntries[pendingEntry.NameHash].PartPath}");
+                            Console.WriteLine($"  Previously added from: {previousPendingEntry.PartPath}");
                         }
-
                         continue;
                     }
 

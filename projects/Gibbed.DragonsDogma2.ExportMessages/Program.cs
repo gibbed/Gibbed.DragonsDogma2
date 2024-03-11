@@ -165,13 +165,12 @@ namespace Gibbed.DragonsDogma2.ExportMessages
             Tommy.TomlTable rootTable = new();
             rootTable["message"] = textArray;
 
-            var sb = new StringBuilder();
-            using (var writer = new StringWriter(sb))
+            StringBuilder sb = new();
+            using (StringWriter writer = new(sb))
             {
                 rootTable.WriteTo(writer);
                 writer.Flush();
             }
-
             File.WriteAllText(outputPath, sb.ToString(), Encoding.UTF8);
         }
 
