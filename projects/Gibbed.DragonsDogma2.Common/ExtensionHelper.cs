@@ -20,6 +20,7 @@
  *    distribution.
  */
 
+using System;
 using System.Text.RegularExpressions;
 
 namespace Gibbed.DragonsDogma2.Common
@@ -30,7 +31,9 @@ namespace Gibbed.DragonsDogma2.Common
 
         static ExtensionHelper()
         {
-            InvalidRegex = new(@"^\.(?:x64|en|ja|\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var platforms = string.Join("|", Enum.GetNames(typeof(Platform)));
+            var languageCodes = string.Join("|", Enum.GetNames(typeof(LanguageCode)));
+            InvalidRegex = new(@$"^\.(?:{platforms}|{languageCodes}|\d+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         public static string GetExtension(string name)
