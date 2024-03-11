@@ -14,3 +14,7 @@
 	path = configs/Dragon's Dogma 2 Character Creator & Storage/files
 	url = https://github.com/gibbed/DD2CCS-File-Lists.git
 	branch = main
+[submodule "projects/Tommy"]
+	path = projects/Tommy
+	url = https://github.com/gibbed/Tommy.git
+	branch = main

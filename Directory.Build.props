@@ -4,5 +4,6 @@
     <GibbedMemory_TargetFrameworksToBuild>net48</GibbedMemory_TargetFrameworksToBuild>
     <GibbedProjectData_TargetFrameworksToBuild>net48</GibbedProjectData_TargetFrameworksToBuild>
     <NDeskOptions_TargetFrameworksToBuild>net48</NDeskOptions_TargetFrameworksToBuild>
+    <Tommy_TargetFrameworksToBuild>net48</Tommy_TargetFrameworksToBuild>
   </PropertyGroup>
 </Project>
