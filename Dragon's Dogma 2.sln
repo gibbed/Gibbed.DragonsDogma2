@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{6D1462FA-A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gibbed.DragonsDogma2.Common", "projects\Gibbed.DragonsDogma2.Common\Gibbed.DragonsDogma2.Common.csproj", "{6599D084-104F-494E-9046-3E92FBA0159C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gibbed.DragonsDogma2.ExportMessages", "projects\Gibbed.DragonsDogma2.ExportMessages\Gibbed.DragonsDogma2.ExportMessages.csproj", "{0A894E36-772C-4298-B96C-D4DAA5570541}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gibbed.DragonsDogma2.FileFormats", "projects\Gibbed.DragonsDogma2.FileFormats\Gibbed.DragonsDogma2.FileFormats.csproj", "{7A519044-2808-4763-882E-EFFADD802A0F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gibbed.DragonsDogma2.Pack", "projects\Gibbed.DragonsDogma2.Pack\Gibbed.DragonsDogma2.Pack.csproj", "{4C3AC0FC-1DAE-448B-98A1-EB88CB7CC745}"
@@ -29,6 +31,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0A894E36-772C-4298-B96C-D4DAA5570541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A894E36-772C-4298-B96C-D4DAA5570541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A894E36-772C-4298-B96C-D4DAA5570541}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A894E36-772C-4298-B96C-D4DAA5570541}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4C3AC0FC-1DAE-448B-98A1-EB88CB7CC745}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4C3AC0FC-1DAE-448B-98A1-EB88CB7CC745}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C3AC0FC-1DAE-448B-98A1-EB88CB7CC745}.Release|Any CPU.ActiveCfg = Release|Any CPU
