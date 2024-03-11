@@ -147,16 +147,16 @@ namespace Gibbed.DragonsDogma2.ExportMessages
 
                 if (message.Texts.Count > 0)
                 {
-                    Tommy.TomlTable textsTable = new();
+                    Tommy.TomlTable textTable = new();
                     foreach (var kv in message.Texts.OrderBy(kv => kv.Key))
                     {
                         if (string.IsNullOrEmpty(kv.Value) == true)
                         {
                             continue;
                         }
-                        textsTable[LanguageIdToString(kv.Key)] = CreateTomlString(kv.Value);
+                        textTable[LanguageIdToString(kv.Key)] = CreateTomlString(kv.Value);
                     }
-                    messageTable["texts"] = textsTable;
+                    messageTable["text"] = textTable;
                 }
 
                 textArray.Add(messageTable);
