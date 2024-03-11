@@ -121,18 +121,18 @@ namespace Gibbed.DragonsDogma2.Pack
                     pendingEntry.PartPath = partPath;
 
                     var pieces = partPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    if (pieces.Length == 2 && string.Compare(pieces[0], "__UNKNOWN", true) == 0)
+                    if (pieces.Length >= 2 && string.Compare(pieces[0], "__UNKNOWN", true) == 0)
                     {
-                        var partName = Path.GetFileNameWithoutExtension(partPath);
+                        var partName = Path.GetFileNameWithoutExtension(pieces.Last());
 
                         if (string.IsNullOrEmpty(partName) == true)
                         {
                             continue;
                         }
 
-                        if (partName.Length > 8)
+                        if (partName.Length > 16)
                         {
-                            partName = partName.Substring(0, 8);
+                            partName = partName.Substring(0, 16);
                         }
 
                         pendingEntry.Name = null;
