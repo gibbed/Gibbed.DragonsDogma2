@@ -97,11 +97,15 @@ namespace Gibbed.DragonsDogma2.Pack
                 Console.WriteLine("Finding files...");
             }
 
+            var directorySeparatorString = Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
+            var altDirectorySeparatorString = Path.AltDirectorySeparatorChar.ToString(CultureInfo.InvariantCulture);
+
             foreach (var relativePath in inputPaths)
             {
                 string inputPath = Path.GetFullPath(relativePath);
 
-                if (inputPath.EndsWith(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture)) == true)
+                if (inputPath.EndsWith(directorySeparatorString) == true ||
+                    inputPath.EndsWith(altDirectorySeparatorString) == true)
                 {
                     inputPath = inputPath.Substring(0, inputPath.Length - 1);
                 }
@@ -117,7 +121,7 @@ namespace Gibbed.DragonsDogma2.Pack
                     pendingEntry.PartPath = partPath;
 
                     var pieces = partPath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-                    if (pieces.Length == 2 && pieces[0].ToUpperInvariant() == "__UNKNOWN")
+                    if (pieces.Length == 2 && string.Compare(pieces[0], "__UNKNOWN", true) == 0)
                     {
                         var partName = Path.GetFileNameWithoutExtension(partPath);
 
