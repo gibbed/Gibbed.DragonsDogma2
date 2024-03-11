@@ -22,9 +22,9 @@
 
 using System.Text.RegularExpressions;
 
-namespace Gibbed.DragonsDogma2.Pack
+namespace Gibbed.DragonsDogma2.Common
 {
-    internal static class ExtensionHelper
+    public static class ExtensionHelper
     {
         private static readonly Regex InvalidRegex;
 
@@ -53,6 +53,28 @@ namespace Gibbed.DragonsDogma2.Pack
                 startIndex = position - 1;
             }
             return null;
+        }
+
+        public static string RemoveExtension(string name)
+        {
+            var regex = InvalidRegex;
+            int startIndex = name.Length - 1;
+            while (startIndex > 0)
+            {
+                int position = name.LastIndexOf('.', startIndex);
+                if (position < 0)
+                {
+                    break;
+                }
+                var length = startIndex - position + 1;
+                var match = regex.Match(name, position, length);
+                if (match.Success == false)
+                {
+                    return name.Substring(0, position);
+                }
+                startIndex = position - 1;
+            }
+            return name;
         }
     }
 }
