@@ -20,32 +20,9 @@
  *    distribution.
  */
 
-using System;
-using Gibbed.DragonsDogma2.Common;
-using Gibbed.Memory;
-
-namespace Gibbed.DragonsDogma2.FileFormats.Messages
+namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
 {
-    internal struct MessageHeader
+    public enum ArgumentType : uint
     {
-        public const int HeaderSize = 40;
-
-        public Guid Guid;
-        public uint UnknownId;
-        public uint NameHash;
-        public int NameOffset;
-        public int ArgumentTableOffset;
-
-        public static MessageHeader Read(ReadOnlySpan<byte> span, ref int index, Endian endian)
-        {
-            MessageHeader instance;
-            instance.Guid = span.ReadValueGuid(ref index, endian);
-            instance.UnknownId = span.ReadValueU32(ref index, endian);
-            instance.NameHash = span.ReadValueU32(ref index, endian);
-            instance.NameOffset = span.ReadValueOffset32(ref index, endian);
-            instance.ArgumentTableOffset = span.ReadValueOffset32(ref index, endian);
-            return instance;
-        }
     }
 }
-

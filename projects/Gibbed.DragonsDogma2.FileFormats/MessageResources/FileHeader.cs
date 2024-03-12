@@ -24,7 +24,7 @@ using System;
 using Gibbed.DragonsDogma2.Common;
 using Gibbed.Memory;
 
-namespace Gibbed.DragonsDogma2.FileFormats.Messages
+namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
 {
     internal struct FileHeader
     {

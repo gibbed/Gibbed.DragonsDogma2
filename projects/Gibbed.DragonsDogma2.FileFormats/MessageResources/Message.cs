@@ -23,7 +23,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Gibbed.DragonsDogma2.FileFormats.Messages
+namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
 {
     public class Message
     {

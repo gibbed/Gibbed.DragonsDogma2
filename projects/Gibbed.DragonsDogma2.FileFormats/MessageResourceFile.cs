@@ -25,16 +25,17 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using Gibbed.DragonsDogma2.Common;
-using Gibbed.DragonsDogma2.FileFormats.Messages;
+using Gibbed.DragonsDogma2.FileFormats.MessageResources;
 using Gibbed.Memory;
 
 namespace Gibbed.DragonsDogma2.FileFormats
 {
-    public class MessageFile
+    // via.MessageResource
+    public class MessageResourceFile
     {
         private readonly List<Message> _Messages;
 
-        public MessageFile()
+        public MessageResourceFile()
         {
             this._Messages = new();
         }
@@ -176,7 +177,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
 
         private static readonly byte[] XorTable;
 
-        static MessageFile()
+        static MessageResourceFile()
         {
             XorTable = new byte[]
             {

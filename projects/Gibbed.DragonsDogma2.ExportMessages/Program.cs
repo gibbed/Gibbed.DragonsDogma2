@@ -95,20 +95,20 @@ namespace Gibbed.DragonsDogma2.ExportMessages
             foreach (var (inputPath, outputPath) in targets.OrderBy(t => t.inputPath))
             {
                 var inputBytes = File.ReadAllBytes(inputPath);
-                MessageFile messageFile = new();
-                messageFile.Deserialize(inputBytes);
-                Export(messageFile, outputPath);
+                MessageResourceFile messageResource = new();
+                messageResource.Deserialize(inputBytes);
+                Export(messageResource, outputPath);
             }
         }
 
-        private static void Export(MessageFile messageFile, string outputPath)
+        private static void Export(MessageResourceFile messageResource, string outputPath)
         {
             Tommy.TomlArray textArray = new()
             {
                 IsTableArray = true,
             };
 
-            foreach (var message in messageFile.Messages)
+            foreach (var message in messageResource.Messages)
             {
                 Tommy.TomlTable messageTable = new();
 
