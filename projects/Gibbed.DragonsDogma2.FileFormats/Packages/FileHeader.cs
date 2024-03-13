@@ -48,7 +48,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
 
             var majorVersion = span.ReadValueU8(ref index);
             var minorVersion = span.ReadValueU8(ref index);
-            if (majorVersion != 4 || minorVersion != 1)
+            if (majorVersion != 4 || (minorVersion != 0 && minorVersion != 1))
             {
                 throw new FormatException();
             }
