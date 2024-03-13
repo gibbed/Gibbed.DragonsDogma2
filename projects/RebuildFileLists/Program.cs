@@ -136,6 +136,25 @@ namespace RebuildFileLists
             Console.WriteLine("Processing...");
             foreach (var inputPath in inputPaths)
             {
+                PackageFile package = new();
+
+                if (File.Exists(inputPath + ".bak") == true)
+                {
+                    using var input = File.OpenRead(inputPath + ".bak");
+                    package.Deserialize(input);
+                }
+                else
+                {
+                    using var input = File.OpenRead(inputPath);
+                    package.Deserialize(input);
+                }
+
+                if (package.EncryptResourceHeaders == false)
+                {
+                    // probably not an official .pak
+                    continue;
+                }
+
                 var outputPath = GetListPath(installPath, inputPath);
                 if (outputPath == null)
                 {
@@ -151,19 +170,6 @@ namespace RebuildFileLists
                 }
 
                 outputPaths.Add(outputPath);
-
-                PackageFile package = new();
-
-                if (File.Exists(inputPath + ".bak") == true)
-                {
-                    using var input = File.OpenRead(inputPath + ".bak");
-                    package.Deserialize(input);
-                }
-                else
-                {
-                    using var input = File.OpenRead(inputPath);
-                    package.Deserialize(input);
-                }
 
                 Breakdown breakdown = new();
 
