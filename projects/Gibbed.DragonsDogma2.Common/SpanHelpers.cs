@@ -21,6 +21,7 @@
  */
 
 using System;
+using System.Buffers;
 using Gibbed.Memory;
 
 namespace Gibbed.DragonsDogma2.Common
@@ -35,6 +36,15 @@ namespace Gibbed.DragonsDogma2.Common
                 throw new FormatException($"offset out of expected 31-bit range: {value}");
             }
             return (int)value;
+        }
+
+        public static void WriteValueOffset32(this IBufferWriter<byte> writer, int value, Endian endian)
+        {
+            if (value < 0)
+            {
+                throw new FormatException($"offset out of expected 31-bit range: {value}");
+            }
+            writer.WriteValueS64(value, endian);
         }
     }
 }
