@@ -18,3 +18,7 @@
 	path = projects/Tommy
 	url = https://github.com/gibbed/Tommy.git
 	branch = main
+[submodule "configs/Dragon's Dogma 2/files"]
+	path = configs/Dragon's Dogma 2/files
+	url = https://github.com/gibbed/DragonsDogma2-File-Lists.git
+	branch = main
