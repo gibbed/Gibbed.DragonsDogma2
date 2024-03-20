@@ -58,6 +58,28 @@ namespace Gibbed.DragonsDogma2.Common
             return null;
         }
 
+        public static string GetFullExtension(string name)
+        {
+            var regex = InvalidRegex;
+            int startIndex = name.Length - 1;
+            while (startIndex > 0)
+            {
+                int position = name.LastIndexOf('.', startIndex);
+                if (position < 0)
+                {
+                    break;
+                }
+                var length = startIndex - position + 1;
+                var match = regex.Match(name, position, length);
+                if (match.Success == false)
+                {
+                    return name.Substring(position);
+                }
+                startIndex = position - 1;
+            }
+            return null;
+        }
+
         public static string RemoveExtension(string name)
         {
             var regex = InvalidRegex;
