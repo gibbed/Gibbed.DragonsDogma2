@@ -30,8 +30,19 @@ namespace Gibbed.DragonsDogma2.Common
     {
         public static int ReadValueOffset32(this ReadOnlySpan<byte> span, ref int index, Endian endian)
         {
-            long value = span.ReadValueS64(ref index, endian);
-            if (value < 0 || value > int.MaxValue)
+            ulong value = span.ReadValueU64(ref index, endian);
+            if (value > int.MaxValue)
+            {
+                throw new FormatException($"offset out of expected 31-bit range: {value}");
+            }
+            return (int)value;
+        }
+
+        public static int ReadValueOffset32(this ReadOnlySpan<byte> span, ref int index, ulong basePointer, Endian endian)
+        {
+            ulong value = span.ReadValueU64(ref index, endian);
+            value -= basePointer;
+            if (value > int.MaxValue)
             {
                 throw new FormatException($"offset out of expected 31-bit range: {value}");
             }
@@ -44,7 +55,7 @@ namespace Gibbed.DragonsDogma2.Common
             {
                 throw new FormatException($"offset out of expected 31-bit range: {value}");
             }
-            writer.WriteValueS64(value, endian);
+            writer.WriteValueU64((ulong)value, endian);
         }
     }
 }
