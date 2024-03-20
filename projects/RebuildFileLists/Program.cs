@@ -177,18 +177,19 @@ namespace RebuildFileLists
                 foreach (var nameHash in package.Resources.Select(e => e.NameHash).Distinct())
                 {
                     var name = hashes[nameHash];
-                    if (string.IsNullOrEmpty(name) == false &&
-                        names.Contains(name) == false)
+                    if (string.IsNullOrEmpty(name) == false)
                     {
                         names.Add(name);
-                        breakdown.Known++;
                     }
                     breakdown.Total++;
 
                     nameLookupNew[nameHash] = name;
                 }
 
+                names = names.Distinct().ToList();
                 names.Sort(new NaturalSortComparer(StringComparison.OrdinalIgnoreCase));
+
+                breakdown.Known = names.Count;
 
                 var outputParentPath = Path.GetDirectoryName(outputPath);
                 if (string.IsNullOrEmpty(outputParentPath) == true)
