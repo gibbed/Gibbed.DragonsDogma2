@@ -49,6 +49,24 @@ namespace Gibbed.DragonsDogma2.FileFormats
 
             if (
                 span.Length >= 4 &&
+                span[0] == 'A' &&
+                span[1] == 'K' &&
+                span[2] == 'P' &&
+                span[3] == 'K')
+            {
+                return ".akpk";
+            }
+            else if(
+                span.Length >= 4 &&
+                span[0] == 'B' &&
+                span[1] == 'K' &&
+                span[2] == 'H' &&
+                span[3] == 'D')
+            {
+                return ".bkhd";
+            }
+            else if (
+                span.Length >= 4 &&
                 span[0] == 'F' &&
                 span[1] == 'B' &&
                 span[2] == 'F' &&
@@ -153,7 +171,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 span[2] == 'R' &&
                 span[3] == 0)
             {
-                return ".usr";
+                return ".user";
             }
             else if (
                 span.Length >= 4 &&
