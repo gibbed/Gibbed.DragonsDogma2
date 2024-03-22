@@ -211,9 +211,13 @@ namespace Gibbed.DragonsDogma2.Pack
 
         private static bool ShouldCompress(string name, bool compress) => ExtensionHelper.GetExtension(name) switch
         {
+            ".abcmesh" => false,
+            ".cmat" => false,
             ".mov" => false,
+            ".ncf" => false,
             ".sbnk" => false,
             ".spck" => false,
+            ".vsrc" => false,
             _ => compress,
         };
 
@@ -224,17 +228,7 @@ namespace Gibbed.DragonsDogma2.Pack
             ulong dataHash;
             if (compress == true)
             {
-                byte[] compressedBytes;
-                using (MemoryStream data = new())
-                using (DeflaterOutputStream zlib = new(data, new(Deflater.BEST_COMPRESSION, true)))
-                {
-                    zlib.IsStreamOwner = false;
-                    input.CopyTo(length, uint.MaxValue, zlib, out dataHash);
-                    zlib.Finish();
-                    zlib.Flush();
-                    data.Flush();
-                    compressedBytes = data.ToArray();
-                }
+                var compressedBytes = CompressZlib(input, length, out dataHash);
                 compressionScheme = CompressionScheme.Deflate;
                 dataOffset = output.Position;
                 dataSizeCompressed = compressedBytes.Length;
@@ -261,6 +255,18 @@ namespace Gibbed.DragonsDogma2.Pack
             resource.UnknownHash = 0xCCCCCCCCu;
             resource.CompressionScheme = compressionScheme;
             return resource;
+        }
+
+        private static byte[] CompressZlib(Stream input, long length, out ulong dataHash)
+        {
+            using MemoryStream data = new();
+            using DeflaterOutputStream zlib = new(data, new(Deflater.BEST_COMPRESSION, true));
+            zlib.IsStreamOwner = false;
+            input.CopyTo(length, uint.MaxValue, zlib, out dataHash);
+            zlib.Finish();
+            zlib.Flush();
+            data.Flush();
+            return data.ToArray();
         }
     }
 }
