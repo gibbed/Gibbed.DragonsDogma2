@@ -54,7 +54,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 span[2] == 'P' &&
                 span[3] == 'K')
             {
-                return ".akpk";
+                return ".spck";
             }
             else if(
                 span.Length >= 4 &&
@@ -63,7 +63,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 span[2] == 'H' &&
                 span[3] == 'D')
             {
-                return ".bkhd";
+                return ".sbnk";
             }
             else if (
                 span.Length >= 4 &&
@@ -95,6 +95,15 @@ namespace Gibbed.DragonsDogma2.FileFormats
             else if (
                 span.Length >= 4 &&
                 span[0] == 'M' &&
+                span[1] == 'C' &&
+                span[2] == 'O' &&
+                span[3] == 'L')
+            {
+                return ".mcol";
+            }
+            else if (
+                span.Length >= 4 &&
+                span[0] == 'M' &&
                 span[1] == 'D' &&
                 span[2] == 'F' &&
                 span[3] == 0)
@@ -111,6 +120,15 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 return ".mesh";
             }
             else if (
+                span.Length >= 8 &&
+                span[4] == 'm' &&
+                span[5] == 'f' &&
+                span[6] == 's' &&
+                span[7] == '2')
+            {
+                return ".motfsm2";
+            }
+            else if (
                 span.Length >= 4 &&
                 span[0] == 'P' &&
                 span[1] == 'F' &&
@@ -118,6 +136,15 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 span[3] == 0)
             {
                 return ".pfb";
+            }
+            else if (
+                span.Length >= 4 &&
+                span[0] == 'R' &&
+                span[1] == 'C' &&
+                span[2] == 'O' &&
+                span[3] == 'L')
+            {
+                return ".rcol";
             }
             else if (
                 span.Length >= 4 &&
