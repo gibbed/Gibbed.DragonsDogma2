@@ -24,6 +24,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="ZstdNet" Version="1.4.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Gibbed.DragonsDogma2.FileFormats\Gibbed.DragonsDogma2.FileFormats.csproj" />

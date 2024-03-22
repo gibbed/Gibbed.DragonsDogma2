@@ -111,6 +111,7 @@ namespace Gibbed.DragonsDogma2.Unpack
             {
                 CompressionScheme.None => DecompressNone,
                 CompressionScheme.Deflate => DecompressDeflate,
+                CompressionScheme.Zstd => DecompressZstd,
                 _ => throw new NotSupportedException(),
             };
 
@@ -129,8 +130,6 @@ namespace Gibbed.DragonsDogma2.Unpack
                 {
                     throw new NotImplementedException("support for blocks not yet implemented");
                 }
-
-                var groups = package.Resources.GroupBy(rh => rh.UnknownHash).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).ToDictionary(g => g.Key, g => g.ToList());
 
                 long current = 0;
                 long total = package.Resources.Count;
@@ -215,6 +214,13 @@ namespace Gibbed.DragonsDogma2.Unpack
             using InflaterInputStream zlib = new(input, new(true));
             zlib.IsStreamOwner = false;
             zlib.CopyTo(resource.DataSizeUncompressed, output);
+        }
+
+        private static void DecompressZstd(ResourceHeader resource, Stream input, Stream output)
+        {
+            input.Position = resource.DataOffset;
+            ZstdNet.DecompressionStream zstd = new(input);
+            zstd.CopyTo(resource.DataSizeUncompressed, output);
         }
     }
 }

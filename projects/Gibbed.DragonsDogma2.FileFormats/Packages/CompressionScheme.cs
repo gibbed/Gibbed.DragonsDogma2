@@ -27,7 +27,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
         None = 0,
 
         Deflate = 1, // https://www.zlib.net
-        //Zstd = 2, // unsupported by Dragon's Dogma 2
+        Zstd = 2, // https://github.com/facebook/zstd  supported by DD2, unsupported by DD2CCS
 
         Lizard = 8, // https://github.com/inikep/lizard
     }
