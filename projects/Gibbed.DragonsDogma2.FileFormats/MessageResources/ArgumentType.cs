@@ -24,5 +24,9 @@ namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
 {
     public enum ArgumentType : uint
     {
+        None = uint.MaxValue, // treated as empty string value
+        Int = 0,
+        Float = 1,
+        String = 2,
     }
 }

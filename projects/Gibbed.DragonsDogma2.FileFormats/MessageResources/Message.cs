@@ -28,10 +28,12 @@ namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
     public class Message
     {
         private readonly Dictionary<uint, string> _Texts;
+        private readonly List<object> _Arguments;
 
         public Message()
         {
             this._Texts = new();
+            this._Arguments = new();
         }
 
         public Guid Guid { get; set; }
@@ -39,6 +41,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
         public uint NameHash { get; set; }
         public string Name { get; set; }
         public Dictionary<uint, string> Texts => this._Texts;
+        public List<object> Arguments => this._Arguments;
 
         public override string ToString()
         {

@@ -33,14 +33,17 @@ namespace Gibbed.DragonsDogma2.FileFormats
     // via.MessageResource
     public class MessageResourceFile
     {
+        private readonly List<Argument> _Arguments;
         private readonly List<Message> _Messages;
 
         public MessageResourceFile()
         {
+            this._Arguments = new();
             this._Messages = new();
         }
 
         public Endian Endian { get; set; }
+        public List<Argument> Arguments => this._Arguments;
         public List<Message> Messages => this._Messages;
 
         public void Serialize(IBufferWriter<byte> writer)
@@ -72,7 +75,6 @@ namespace Gibbed.DragonsDogma2.FileFormats
             }
 
             byte[] stringBuffer;
-            if (dataHeader.MessageCount > 0)
             {
                 // TODO(gibbed): this assumes the string data is always at the end of the file?
                 int stringsSize = span.Length - dataHeader.StringsOffset;
@@ -88,10 +90,6 @@ namespace Gibbed.DragonsDogma2.FileFormats
                     stringBuffer[i] = c;
                     previousByte = b;
                 }
-            }
-            else
-            {
-                stringBuffer = default;
             }
             Dictionary<int, string> stringCache = new();
             string ReadString(ReadOnlySpan<byte> span, int offset)
@@ -119,11 +117,9 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 }
             }
 
+            var arguments = new Argument[dataHeader.ArgumentCount];
             if (dataHeader.ArgumentCount > 0)
             {
-                // TODO(gibbed): none of the msg files in DD2CCS use this
-                throw new NotImplementedException();
-
                 index = dataHeader.ArgumentNameTableOffset;
                 var argumentNameOffsets = new int[dataHeader.ArgumentCount];
                 for (int i = 0; i < dataHeader.ArgumentCount; i++)
@@ -132,10 +128,15 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 }
 
                 index = dataHeader.ArgumentTypeTableOffset;
-                var argumentTypes = new int[dataHeader.ArgumentCount];
                 for (int i = 0; i < dataHeader.ArgumentCount; i++)
                 {
-                    argumentTypes[i] = span.ReadValueS32(ref index, endian);
+                    var argumentType = (ArgumentType)span.ReadValueS32(ref index, endian);
+                    var argumentName = ReadString(stringBuffer, argumentNameOffsets[i]);
+                    arguments[i] = new()
+                    {
+                        Type = argumentType,
+                        Name = argumentName,
+                    };
                 }
             }
 
@@ -167,11 +168,45 @@ namespace Gibbed.DragonsDogma2.FileFormats
                     var languageId = languageIds[j];
                     message.Texts.Add(languageId, ReadString(stringBuffer, messageTextOffsets[i, j]));
                 }
+                index = messageHeader.ArgumentTableOffset;
+                for (int j = 0; j < dataHeader.ArgumentCount; j++)
+                {
+                    object argumentValue;
+                    switch (arguments[j].Type)
+                    {
+                        case ArgumentType.Int:
+                        {
+                            argumentValue = span.ReadValueS32(ref index, endian);
+                            index += 4;
+                            break;
+                        }
+                        case ArgumentType.Float:
+                        {
+                            argumentValue = span.ReadValueF64(ref index, endian);
+                            break;
+                        }
+                        case ArgumentType.None:
+                        case ArgumentType.String:
+                        {
+                            var argumentStringOffset = span.ReadValueS32(ref index, endian);
+                            index += 4;
+                            argumentValue = ReadString(stringBuffer, argumentStringOffset);
+                            break;
+                        }
+                        default:
+                        {
+                            throw new NotSupportedException();
+                        }
+                    }
+                    message.Arguments.Add(argumentValue);
+                }
                 messages[i] = message;
             }
 
+            this._Arguments.Clear();
             this._Messages.Clear();
             this.Endian = endian;
+            this.Arguments.AddRange(arguments);
             this.Messages.AddRange(messages);
         }
 

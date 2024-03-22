@@ -25,5 +25,6 @@ namespace Gibbed.DragonsDogma2.FileFormats.MessageResources
     public struct Argument
     {
         public ArgumentType Type;
+        public string Name;
     }
 }

@@ -103,6 +103,19 @@ namespace Gibbed.DragonsDogma2.ExportMessages
 
         private static void Export(MessageResourceFile messageResource, string outputPath)
         {
+            Tommy.TomlArray argumentArray = new()
+            {
+                IsTableArray = true,
+            };
+
+            foreach (var argument in messageResource.Arguments)
+            {
+                Tommy.TomlTable argumentTable = new();
+                argumentTable["type"] = CreateTomlString(argument.Type.ToString());
+                argumentTable["name"] = CreateTomlString(argument.Name);
+                argumentArray.Add(argumentTable);
+            }
+
             Tommy.TomlArray textArray = new()
             {
                 IsTableArray = true,
@@ -159,11 +172,43 @@ namespace Gibbed.DragonsDogma2.ExportMessages
                     messageTable["text"] = textTable;
                 }
 
+                if (message.Arguments.Count > 0)
+                {
+                    Tommy.TomlArray messageArgumentArray = new();
+                    foreach (var value in message.Arguments)
+                    {
+                        if (value is int intValue)
+                        {
+                            messageArgumentArray.Add(intValue);
+                        }
+                        else if (value is double floatValue)
+                        {
+                            messageArgumentArray.Add(floatValue);
+                        }
+                        else if (value is string stringValue)
+                        {
+                            messageArgumentArray.Add(CreateTomlString(stringValue));
+                        }
+                        else
+                        {
+                            throw new NotSupportedException();
+                        }
+                    }
+                    messageTable["argument_values"] = messageArgumentArray;
+                }
+
                 textArray.Add(messageTable);
             }
 
             Tommy.TomlTable rootTable = new();
-            rootTable["message"] = textArray;
+            if (argumentArray.ChildrenCount > 0)
+            {
+                rootTable["argument"] = argumentArray;
+            }
+            if (textArray.ChildrenCount > 0)
+            {
+                rootTable["message"] = textArray;
+            }
 
             StringBuilder sb = new();
             using (StringWriter writer = new(sb))
