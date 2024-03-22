@@ -32,24 +32,6 @@ namespace RebuildFileLists
 {
     internal class Program
     {
-        private static string GetListPath(string installPath, string inputPath)
-        {
-            installPath = installPath.ToLowerInvariant();
-            inputPath = inputPath.ToLowerInvariant();
-
-            if (inputPath.StartsWith(installPath) == false)
-            {
-                return null;
-            }
-
-            var baseName = inputPath.Substring(installPath.Length + 1);
-
-            string outputPath;
-            outputPath = Path.Combine("files", baseName);
-            outputPath = Path.ChangeExtension(outputPath, ".filelist");
-            return outputPath;
-        }
-
         public static void Main(string[] args)
         {
             string projectName = null;
@@ -136,6 +118,8 @@ namespace RebuildFileLists
             Console.WriteLine("Processing...");
             foreach (var inputPath in inputPaths)
             {
+                var relativePath = GetRelativePath(installPath, inputPath);
+
                 PackageFile package = new();
 
                 if (File.Exists(inputPath + ".bak") == true)
@@ -149,7 +133,8 @@ namespace RebuildFileLists
                     package.Deserialize(input);
                 }
 
-                if (package.EncryptResourceHeaders == false)
+                if (package.EncryptResourceHeaders == false &&
+                    relativePath.StartsWith("dlc", StringComparison.InvariantCultureIgnoreCase) == false)
                 {
                     // probably not an official .pak
                     continue;
@@ -218,6 +203,29 @@ namespace RebuildFileLists
                 breakdown.Total = nameLookupNew.Count;
                 output.WriteLine($"{breakdown}");
             }
+        }
+
+        private static string GetRelativePath(string installPath, string inputPath)
+        {
+            installPath = installPath.ToLowerInvariant();
+            inputPath = inputPath.ToLowerInvariant();
+
+            if (inputPath.StartsWith(installPath) == false)
+            {
+                return null;
+            }
+
+            return inputPath.Substring(installPath.Length + 1);
+        }
+
+        private static string GetListPath(string installPath, string inputPath)
+        {
+            var baseName = GetRelativePath(installPath, inputPath);
+
+            string outputPath;
+            outputPath = Path.Combine("files", baseName);
+            outputPath = Path.ChangeExtension(outputPath, ".filelist");
+            return outputPath;
         }
     }
 }
