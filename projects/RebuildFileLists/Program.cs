@@ -233,7 +233,8 @@ namespace RebuildFileLists
         private static string GetListPath(string installPath, string inputPath)
         {
             var baseName = GetRelativePath(installPath, inputPath);
-
+            // filter the patch pak names so it's less silly
+            baseName = baseName.Replace(".pak.patch_", ".patch_");
             string outputPath;
             outputPath = Path.Combine("files", baseName);
             outputPath = Path.ChangeExtension(outputPath, ".filelist");
