@@ -113,6 +113,8 @@ namespace RebuildFileLists
 
             List<string> outputPaths = new();
 
+            NaturalSortComparer comparer = new(StringComparison.OrdinalIgnoreCase);
+
             Dictionary<ulong, string> nameLookupNew = new();
 
             Console.WriteLine("Processing...");
@@ -172,7 +174,7 @@ namespace RebuildFileLists
                 }
 
                 names = names.Distinct().ToList();
-                names.Sort(new NaturalSortComparer(StringComparison.OrdinalIgnoreCase));
+                names.Sort(comparer);
 
                 breakdown.Known = names.Count;
 
@@ -190,6 +192,16 @@ namespace RebuildFileLists
                     {
                         output.WriteLine(name);
                     }
+                }
+            }
+
+            using (StreamWriter output = new(Path.Combine(listsPath, "files", "combined_for_REtool.list")))
+            {
+                foreach (string name in nameLookupNew.Values
+                    .Where(v => string.IsNullOrEmpty(v) == false)
+                    .OrderBy(v => v, comparer))
+                {
+                    output.WriteLine(name);
                 }
             }
 
