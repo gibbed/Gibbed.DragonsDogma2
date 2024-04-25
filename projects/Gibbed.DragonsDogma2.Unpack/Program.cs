@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using Gibbed.DragonsDogma2.Common;
 using Gibbed.DragonsDogma2.FileFormats;
 using Gibbed.DragonsDogma2.FileFormats.Packages;
+using Gibbed.Memory;
 using NDesk.Options;
 using InflaterInputStream = ICSharpCode.SharpZipLib.Zip.Compression.Streams.InflaterInputStream;
 
@@ -107,14 +108,6 @@ namespace Gibbed.DragonsDogma2.Unpack
                 ? extras[1]
                 : Path.ChangeExtension(inputPath, null) + "_unpack";
 
-            DecompressDelegate GetDecompress(ResourceHeader resource) => resource.CompressionScheme switch
-            {
-                CompressionScheme.None => DecompressNone,
-                CompressionScheme.Deflate => DecompressDeflate,
-                CompressionScheme.Zstd => DecompressZstd,
-                _ => throw new NotSupportedException(),
-            };
-
             Regex filter = null;
             if (string.IsNullOrEmpty(filterPattern) == false)
             {
@@ -126,6 +119,8 @@ namespace Gibbed.DragonsDogma2.Unpack
                 PackageFile package = new();
                 package.Deserialize(input);
 
+                var endian = package.Endian;
+
                 if (package.Blocks.Count > 0)
                 {
                     throw new NotImplementedException("support for blocks not yet implemented");
@@ -135,7 +130,7 @@ namespace Gibbed.DragonsDogma2.Unpack
                 long total = package.Resources.Count;
                 var padding = total.ToString(CultureInfo.InvariantCulture).Length;
 
-                foreach (var resource in package.Resources.OrderBy(eh => eh.DataOffset))
+                foreach (var resource in package.Resources.OrderBy(rh => rh.DataOffset))
                 {
                     current++;
 
@@ -143,10 +138,9 @@ namespace Gibbed.DragonsDogma2.Unpack
                     if (string.IsNullOrEmpty(resourceName) == true)
                     {
                         var guessResource = resource;
-                        var guessDecompress = GetDecompress(guessResource);
                         guessResource.DataSizeUncompressed = Math.Min(guessResource.DataSizeUncompressed, FileDetection.BestGuessLength);
                         using MemoryStream guessData = new();
-                        guessDecompress(guessResource, input, guessData);
+                        Unpack(input, guessResource, endian, guessData);
                         guessData.Flush();
 
                         guessData.Position = 0;
@@ -181,10 +175,8 @@ namespace Gibbed.DragonsDogma2.Unpack
                         Directory.CreateDirectory(outputParentPath);
                     }
 
-                    var decompress = GetDecompress(resource);
-
                     using var output = File.Create(outputPath);
-                    decompress(resource, input, output);
+                    Unpack(input, resource, endian, output);
 
                     /*
                     using MemoryStream uncompressedData = new();
@@ -200,27 +192,63 @@ namespace Gibbed.DragonsDogma2.Unpack
             }
         }
 
-        delegate void DecompressDelegate(ResourceHeader resource, Stream input, Stream output);
-
-        private static void DecompressNone(ResourceHeader resource, Stream input, Stream output)
+        private static void Unpack(Stream input, ResourceHeader resource, Endian endian, Stream output)
         {
-            input.Position = resource.DataOffset;
-            input.CopyTo(resource.DataSizeUncompressed, output);
+            if (resource.CompressionScheme == CompressionScheme.None)
+            {
+                input.Position = resource.DataOffset;
+                input.CopyTo(resource.DataSizeUncompressed, output);
+            }
+            else
+            {
+                var decompress = GetDecompress(resource);
+
+                if (resource.CryptoScheme != CryptoScheme.None)
+                {
+                    input.Position = resource.DataOffset;
+                    var dataBytes = new byte[resource.DataSizeCompressed];
+                    input.ReadToSpan(dataBytes);
+
+                    dataBytes = Decrypt(dataBytes, resource.CryptoScheme, endian);
+
+                    using MemoryStream data = new(dataBytes, false);
+                    decompress(data, output, resource.DataSizeUncompressed);
+                }
+                else
+                {
+                    input.Position = resource.DataOffset;
+                    decompress(input, output, resource.DataSizeUncompressed);
+                }
+            }
         }
 
-        private static void DecompressDeflate(ResourceHeader resource, Stream input, Stream output)
+        private static byte[] Decrypt(ReadOnlySpan<byte> span, CryptoScheme cryptoScheme, Endian endian)
         {
-            input.Position = resource.DataOffset;
+            int index = 0;
+            var size = span.ReadValueS64(ref index, endian);
+            return BogocryptResource.Decrypt(span.Slice(index), size);
+        }
+
+        private static DecompressDelegate GetDecompress(ResourceHeader resource) => resource.CompressionScheme switch
+        {
+            CompressionScheme.Deflate => DecompressDeflate,
+            CompressionScheme.Zstd => DecompressZstd,
+            _ => throw new NotSupportedException(),
+        };
+
+        delegate void DecompressDelegate(Stream input, Stream output, long outputSize);
+
+        private static void DecompressDeflate(Stream input, Stream output, long outputSize)
+        {
             using InflaterInputStream zlib = new(input, new(true));
             zlib.IsStreamOwner = false;
-            zlib.CopyTo(resource.DataSizeUncompressed, output);
+            zlib.CopyTo(outputSize, output);
         }
 
-        private static void DecompressZstd(ResourceHeader resource, Stream input, Stream output)
+        private static void DecompressZstd(Stream input, Stream output, long outputSize)
         {
-            input.Position = resource.DataOffset;
             ZstdNet.DecompressionStream zstd = new(input);
-            zstd.CopyTo(resource.DataSizeUncompressed, output);
+            zstd.CopyTo(outputSize, output);
         }
     }
 }

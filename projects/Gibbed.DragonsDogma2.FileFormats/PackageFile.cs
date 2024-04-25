@@ -136,7 +136,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 Random random = new();
                 random.NextBytes(keyBytes);
 
-                var bogocrypt = Bogocrypt.Create(keyBytes);
+                var bogocrypt = BogocryptStrings.Create(keyBytes);
                 bogocrypt.Xor(headerBytes.AsSpan(FileHeader.HeaderSize, resourceHeadersSize));
 
                 headerWriter.WriteBytes(keyBytes);
@@ -225,7 +225,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 Span<byte> keyBytes = stackalloc byte[128];
                 input.ReadToSpan(keyBytes);
 
-                var bogocrypt = Bogocrypt.Create(keyBytes);
+                var bogocrypt = BogocryptStrings.Create(keyBytes);
                 bogocrypt.Xor(resourceHeaderBuffer);
             }
 
@@ -233,7 +233,14 @@ namespace Gibbed.DragonsDogma2.FileFormats
             int resourceHeaderOffset = 0;
             for (int i = 0; i < header.ResourceCount; i++)
             {
-                resourceHeaders[i] = ResourceHeader.Read(resourceHeaderBuffer, ref resourceHeaderOffset, endian);
+                var resourceHeader = resourceHeaders[i] = ResourceHeader.Read(
+                    resourceHeaderBuffer,
+                    ref resourceHeaderOffset,
+                    endian);
+                if (resourceHeader.InvalidFlags != 0)
+                {
+                    throw new InvalidOperationException();
+                }
             }
 
             this._Resources.Clear();

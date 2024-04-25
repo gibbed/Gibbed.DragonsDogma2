@@ -250,7 +250,7 @@ namespace Gibbed.DragonsDogma2.Pack
             resource.DataOffset = dataOffset;
             resource.DataSizeUncompressed = length;
             resource.DataSizeCompressed = dataSizeCompressed;
-            resource.Flags = default;
+            resource.RawFlags = default;
             resource.DataHash = dataHashHash;
             resource.UnknownHash = 0xCCCCCCCCu;
             resource.CompressionScheme = compressionScheme;

@@ -35,23 +35,61 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
         public long DataSizeCompressed;
         public long DataSizeUncompressed;
 
-        // 31- 0 ???????? ????4321 ???????? ????ssss
+        // 31- 0 ???????? ????cccc ???765?4 ?321ssss
         // 63-32 ???????? ???????? ???????? ????????
+        // c = crypto scheme
         // s = compression scheme
         // # = unknown
-        public ulong Flags;
+        public ulong RawFlags;
 
         public uint DataHash;
         public uint UnknownHash;
 
+        public readonly ulong InvalidFlags => this.RawFlags & 0xFFFFFFFF_FFF0_E280ul;
+        public readonly ulong UnknownFlags => (this.RawFlags & ~this.InvalidFlags) & ~(0x00000000_000F_000Ful);
+
         public CompressionScheme CompressionScheme
         {
-            get { return (CompressionScheme)(this.Flags & 0xF); }
+            get { return (CompressionScheme)((this.RawFlags >> 0) & 0xF); }
             set
             {
-                this.Flags &= ~0xFul;
-                this.Flags |= ((byte)value) & 0xFul;
+                const int shift = 0;
+                this.RawFlags &= ~(0xFul << shift);
+                this.RawFlags |= (((byte)value) & 0xFul) << shift;
             }
+        }
+
+        public CryptoSchemeFlags CryptoSchemeFlags
+        {
+            get { return (CryptoSchemeFlags)((this.RawFlags >> 16) & 0xF); }
+            set
+            {
+                const int shift = 16;
+                this.RawFlags &= ~(0xFul << shift);
+                this.RawFlags |= (((byte)value) & 0xFul) << shift;
+            }
+        }
+
+        public CryptoScheme CryptoScheme
+        {
+            get => this.CryptoSchemeFlags switch
+            {
+                CryptoSchemeFlags.None => CryptoScheme.None,
+                CryptoSchemeFlags.Type1 => CryptoScheme.Type1,
+                CryptoSchemeFlags.Type2 => CryptoScheme.Type2,
+                CryptoSchemeFlags.Type3 => CryptoScheme.Type3,
+                CryptoSchemeFlags.Type4 => CryptoScheme.Type4,
+                _ => throw new NotSupportedException(),
+            };
+            set => this.CryptoSchemeFlags = value switch
+            {
+                CryptoScheme.None => CryptoSchemeFlags.None,
+                CryptoScheme.Type1 => CryptoSchemeFlags.Type1,
+                CryptoScheme.Type2 => CryptoSchemeFlags.Type2,
+                CryptoScheme.Type3 => CryptoSchemeFlags.Type3,
+                CryptoScheme.Type4 => CryptoSchemeFlags.Type4,
+                _ => throw new NotSupportedException(),
+            };
         }
 
         internal static ResourceHeader Read(ReadOnlySpan<byte> span, ref int index, Endian endian)
@@ -61,7 +99,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
             instance.DataOffset = span.ReadValueS64(ref index, endian);
             instance.DataSizeCompressed = span.ReadValueS64(ref index, endian);
             instance.DataSizeUncompressed = span.ReadValueS64(ref index, endian);
-            instance.Flags = span.ReadValueU64(ref index, endian);
+            instance.RawFlags = span.ReadValueU64(ref index, endian);
             instance.DataHash = span.ReadValueU32(ref index, endian);
             instance.UnknownHash = span.ReadValueU32(ref index, endian);
             return instance;
@@ -73,7 +111,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
             writer.WriteValueS64(instance.DataOffset, endian);
             writer.WriteValueS64(instance.DataSizeCompressed, endian);
             writer.WriteValueS64(instance.DataSizeUncompressed, endian);
-            writer.WriteValueU64(instance.Flags, endian);
+            writer.WriteValueU64(instance.RawFlags, endian);
             writer.WriteValueU32(instance.DataHash, endian);
             writer.WriteValueU32(instance.UnknownHash, endian);
         }
@@ -83,6 +121,6 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
             Write(this, writer, endian);
         }
 
-        public override string ToString() => $"{this.NameHash:X16} @ {this.DataOffset:X} ({this.DataSizeCompressed}, {this.DataSizeUncompressed}, {this.CompressionScheme}) {this.Flags >> 4} {this.DataHash:X8} {this.UnknownHash:X8}";
+        public override string ToString() => $"{this.NameHash:X16} @ {this.DataOffset:X} ({this.DataSizeCompressed}, {this.DataSizeUncompressed}, {this.CompressionScheme}, {this.CryptoScheme}) {this.UnknownFlags:X} {this.DataHash:X8} {this.UnknownHash:X8}";
     }
 }

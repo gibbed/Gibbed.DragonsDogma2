@@ -25,12 +25,12 @@ using System.Numerics;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    internal struct Bogocrypt
+    internal struct BogocryptStrings
     {
         private static readonly BigInteger _Modulus;
         private static readonly BigInteger _Exponent;
 
-        static Bogocrypt()
+        static BogocryptStrings()
         {
             _Modulus = new(new byte[]
             {
@@ -60,7 +60,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
 
         private byte[] _XorBytes;
 
-        public static Bogocrypt Create(ReadOnlySpan<byte> key)
+        public static BogocryptStrings Create(ReadOnlySpan<byte> key)
         {
             if (key.Length != 128)
             {
@@ -73,7 +73,7 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
             BigInteger keyValue = new(keyPaddedBytes);
             BigInteger xor = BigInteger.ModPow(keyValue, _Exponent, _Modulus);
 
-            Bogocrypt instance;
+            BogocryptStrings instance;
             instance._XorBytes = xor.ToByteArray();
             return instance;
         }
