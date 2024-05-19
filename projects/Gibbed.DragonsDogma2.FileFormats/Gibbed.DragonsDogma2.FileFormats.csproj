@@ -9,7 +9,7 @@
     <LangVersion>9.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(GibbedDragonsDogma2_TargetFrameworksToBuild)' == '' ">
-    <GibbedSleepingDogs_TargetFrameworksToBuild>$(TargetFrameworksToBuild)</GibbedSleepingDogs_TargetFrameworksToBuild>
+    <GibbedDragonsDogma2_TargetFrameworksToBuild>$(TargetFrameworksToBuild)</GibbedDragonsDogma2_TargetFrameworksToBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(GibbedDragonsDogma2_TargetFrameworksToBuild)' == '' ">
     <TargetFrameworks>net48</TargetFrameworks>
