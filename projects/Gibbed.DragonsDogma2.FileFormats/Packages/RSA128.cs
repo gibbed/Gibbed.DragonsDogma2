@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+﻿/* Copyright (c) 2025 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -25,12 +25,12 @@ using System.Numerics;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    internal struct BogocryptStrings
+    internal struct RSA128
     {
         private static readonly BigInteger _Modulus;
         private static readonly BigInteger _Exponent;
 
-        static BogocryptStrings()
+        static RSA128()
         {
             _Modulus = new(new byte[]
             {
@@ -60,34 +60,25 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
 
         private byte[] _XorBytes;
 
-        public static BogocryptStrings Create(ReadOnlySpan<byte> key)
+        public static byte[] Encrypt(ReadOnlySpan<byte> span)
         {
-            if (key.Length != 128)
-            {
-                throw new ArgumentOutOfRangeException(nameof(key));
-            }
-
-            var keyPaddedBytes = key.ToArray();
-            Array.Resize(ref keyPaddedBytes, key.Length + 1);
-
-            BigInteger keyValue = new(keyPaddedBytes);
-            BigInteger xor = BigInteger.ModPow(keyValue, _Exponent, _Modulus);
-
-            BogocryptStrings instance;
-            instance._XorBytes = xor.ToByteArray();
-            return instance;
+            throw new NotSupportedException("cannot encrypt; we don't have Capcom's public key");
         }
 
-        public readonly void Xor(Span<byte> span)
+        public static byte[] Decrypt(ReadOnlySpan<byte> span)
         {
-            var xorBytes = this._XorBytes;
-            for (int i = 0; i < span.Length; i++)
+            if (span.Length != 128)
             {
-                int x = xorBytes[i % 32];
-                x *= xorBytes[i % 29];
-                x += i;
-                span[i] ^= (byte)x;
+                throw new ArgumentOutOfRangeException(nameof(span));
             }
+
+            var bytes = span.ToArray();
+            Array.Resize(ref bytes, span.Length + 1);
+
+            BigInteger keyValue = new(bytes);
+            BigInteger xor = BigInteger.ModPow(keyValue, _Exponent, _Modulus);
+
+            return xor.ToByteArray();
         }
     }
 }

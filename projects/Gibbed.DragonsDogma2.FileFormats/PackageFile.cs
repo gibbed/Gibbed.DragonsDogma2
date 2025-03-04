@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+﻿/* Copyright (c) 2025 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -44,17 +44,19 @@ namespace Gibbed.DragonsDogma2.FileFormats
         }
 
         public Endian Endian { get; set; }
-        public bool EncryptResourceHeaders { get; set; }
+        public bool IsSigned { get; set; }
         public List<ResourceHeader> Resources => this._Resources;
-        public UnknownHeader? Unknown { get; set; }
+        public VersionHeader? Version { get; set; }
+        public Unknown4Header? Unknown4 { get; set; }
         public uint BlockSize { get; set; }
         public List<BlockHeader> Blocks => this._Blocks;
 
         public static int EstimateHeaderSize(
             int resourceCount,
-            bool hasUnknown,
+            bool hasVersion,
+            bool hasUnknown4,
             int blockCount,
-            bool encryptResourceHeaders)
+            bool isSigned)
         {
             var resourceHeadersSize = resourceCount * ResourceHeader.HeaderSize;
 
@@ -62,9 +64,14 @@ namespace Gibbed.DragonsDogma2.FileFormats
 
             headerSize += resourceHeadersSize;
 
-            if (hasUnknown == true)
+            if (hasVersion == true)
             {
-                headerSize += UnknownHeader.HeaderSize;
+                headerSize += VersionHeader.HeaderSize;
+            }
+
+            if (hasUnknown4 == true)
+            {
+                headerSize += Unknown4Header.HeaderSize;
             }
 
             if (blockCount > 0)
@@ -73,7 +80,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 headerSize += BlockHeader.HeaderSize * blockCount;
             }
 
-            if (encryptResourceHeaders == true)
+            if (isSigned == true)
             {
                 headerSize += 128;
             }
@@ -85,9 +92,10 @@ namespace Gibbed.DragonsDogma2.FileFormats
         {
             return EstimateHeaderSize(
                 this._Resources.Count,
-                this.Unknown != null,
+                this.Version != null,
+                this.Unknown4 != null,
                 this._Blocks.Count,
-                this.EncryptResourceHeaders);
+                this.IsSigned);
         }
 
         public void Serialize(Stream output)
@@ -108,10 +116,16 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 resourceHeader.Write(headerWriter, endian);
             }
 
-            if (this.Unknown != null)
+            if (this.Version != null)
             {
-                fileFlags |= FileFlags.Unknown2;
-                this.Unknown.Value.Write(headerWriter, endian);
+                fileFlags |= FileFlags.Version;
+                this.Version.Value.Write(headerWriter, endian);
+            }
+
+            if (this.Unknown4 != null)
+            {
+                fileFlags |= FileFlags.Unknown4;
+                this.Unknown4.Value.Write(headerWriter, endian);
             }
 
             if (this.Blocks.Count > 0)
@@ -127,19 +141,26 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 }
             }
 
-            if (this.EncryptResourceHeaders == true)
+            if (this.IsSigned == true)
             {
-                fileFlags |= FileFlags.EncryptResourceHeaders;
+                fileFlags |= FileFlags.Signed;
 
-                var keyBytes = new byte[128];
+                throw new NotSupportedException("cannot sign package; we don't have Capcom's public key");
 
-                Random random = new();
-                random.NextBytes(keyBytes);
+                /*
+                byte[] signatureBytes;
+                using (var sha3 = Sha3.CreateSha3Hash256())
+                {
+                    var resourceHeadersBytes = headerBytes.AsSpan(FileHeader.HeaderSize, resourceHeadersSize).ToArray();
+                    // TODO(gibbed): span support
+                    signatureBytes = sha3.ComputeHash(resourceHeadersBytes);
+                }
 
-                var bogocrypt = BogocryptStrings.Create(keyBytes);
-                bogocrypt.Xor(headerBytes.AsSpan(FileHeader.HeaderSize, resourceHeadersSize));
+                BogocryptStrings.Xor(headerBytes.AsSpan(FileHeader.HeaderSize, resourceHeadersSize), signatureBytes);
 
-                headerWriter.WriteBytes(keyBytes);
+                var encryptedSignature = RSA128.Encrypt(signatureBytes);
+                headerWriter.WriteBytes(encryptedSignature);
+                */
             }
 
             FileHeader fileHeader;
@@ -171,7 +192,7 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 : new byte[resourceHeadersSize];
             input.ReadToSpan(resourceHeaderBuffer);
 
-            if ((header.Flags & FileFlags.Unknown0) != 0)
+            if ((header.Flags & FileFlags.Extended) != 0)
             {
                 // TODO(gibbed): maybe name lookup?
                 // byte[16 * header.ResourceCount] <- each entry has pointer into buffer1
@@ -183,19 +204,29 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 throw new NotImplementedException();
             }
 
-            UnknownHeader? unknownHeader;
-            if ((header.Flags & FileFlags.Unknown2) != 0)
+            VersionHeader? versionHeader;
+            if ((header.Flags & FileFlags.Version) != 0)
             {
-                unknownHeader = input.ReadToInstance(UnknownHeader.HeaderSize, endian, UnknownHeader.Read);
+                versionHeader = input.ReadToInstance(VersionHeader.HeaderSize, endian, VersionHeader.Read);
             }
             else
             {
-                unknownHeader = null;
+                versionHeader = null;
+            }
+
+            // TODO(gibbed): introduced with Monster Hunter: Wilds
+            Unknown4Header? unknown4Header;
+            if ((header.Flags & FileFlags.Unknown4) != 0)
+            {
+                unknown4Header = input.ReadToInstance(Unknown4Header.HeaderSize, endian, Unknown4Header.Read);
+            }
+            else
+            {
+                unknown4Header = null;
             }
 
             uint blockSize;
             BlockHeader[] blockHeaders;
-
             if ((header.Flags & FileFlags.Blocks) != 0)
             {
                 var blockTableHeader = input.ReadToInstance(BlockTableHeader.HeaderSize, endian, BlockTableHeader.Read);
@@ -220,13 +251,14 @@ namespace Gibbed.DragonsDogma2.FileFormats
                 blockHeaders = null;
             }
 
-            if ((header.Flags & FileFlags.EncryptResourceHeaders) != 0)
+            if ((header.Flags & FileFlags.Signed) != 0)
             {
-                Span<byte> keyBytes = stackalloc byte[128];
-                input.ReadToSpan(keyBytes);
+                Span<byte> encryptedSignatureBytes = stackalloc byte[128];
+                input.ReadToSpan(encryptedSignatureBytes);
 
-                var bogocrypt = BogocryptStrings.Create(keyBytes);
-                bogocrypt.Xor(resourceHeaderBuffer);
+                var signatureBytes = RSA128.Decrypt(encryptedSignatureBytes);
+                // resource headers are obfuscated with SHA3-256(resource headers)
+                BogocryptResourceHeader.Xor(resourceHeaderBuffer, signatureBytes);
             }
 
             var resourceHeaders = new ResourceHeader[header.ResourceCount];
@@ -247,9 +279,10 @@ namespace Gibbed.DragonsDogma2.FileFormats
             this._Blocks.Clear();
 
             this.Endian = endian;
-            this.EncryptResourceHeaders = (header.Flags & FileFlags.EncryptResourceHeaders) != 0;
+            this.IsSigned = (header.Flags & FileFlags.Signed) != 0;
             this._Resources.AddRange(resourceHeaders);
-            this.Unknown = unknownHeader;
+            this.Version = versionHeader;
+            this.Unknown4 = unknown4Header;
             this.BlockSize = blockSize;
             if (blockHeaders != null)
             {

@@ -24,30 +24,21 @@ using System;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    [Flags]
-    public enum FileFlags : ushort
+    internal static class BogocryptResourceHeader
     {
-        None = 0,
-
-        Extended = 1 << 0,
-        Blocks = 1 << 1,
-        Version = 1 << 2,
-        Signed = 1 << 3,
-        Unknown4 = 1 << 4, // TODO(gibbed): Monster Hunter: Wilds
-
-        // flags that don't appear to exist yet, for completion
-        Unknown5 = 1 << 5,
-        Unknown6 = 1 << 6,
-        Unknown7 = 1 << 7,
-        Unknown8 = 1 << 8,
-        Unknown9 = 1 << 9,
-        Unknown10 = 1 << 10,
-        Unknown11 = 1 << 11,
-        Unknown12 = 1 << 12,
-        Unknown13 = 1 << 13,
-        Unknown14 = 1 << 14,
-        Unknown15 = 1 << 15,
-
-        Known = Extended | Blocks | Version | Signed | Unknown4,
+        public static void Xor(Span<byte> span, Span<byte> table)
+        {
+            if (table == null || table.Length != 32)
+            {
+                throw new ArgumentException("xor table must be 32 bytes", nameof(table));
+            }
+            for (int i = 0; i < span.Length; i++)
+            {
+                int x = table[i % 32];
+                x *= table[i % 29];
+                x += i;
+                span[i] ^= (byte)x;
+            }
+        }
     }
 }

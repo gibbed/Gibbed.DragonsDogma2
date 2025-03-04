@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+﻿/* Copyright (c) 2025 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Gibbed.DragonsDogma2.Common;
 using Gibbed.DragonsDogma2.FileFormats;
 using NaturalSort.Extension;
 using NDesk.Options;
@@ -135,7 +136,7 @@ namespace RebuildFileLists
                     package.Deserialize(input);
                 }
 
-                if (package.EncryptResourceHeaders == false &&
+                if (package.IsSigned == false &&
                     relativePath.StartsWith("dlc", StringComparison.InvariantCultureIgnoreCase) == false)
                 {
                     // probably not an official .pak

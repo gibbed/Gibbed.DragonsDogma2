@@ -21,33 +21,38 @@
  */
 
 using System;
+using System.Buffers;
+using Gibbed.Memory;
 
 namespace Gibbed.DragonsDogma2.FileFormats.Packages
 {
-    [Flags]
-    public enum FileFlags : ushort
+    public struct VersionHeader
     {
-        None = 0,
+        public const int HeaderSize = 6;
 
-        Extended = 1 << 0,
-        Blocks = 1 << 1,
-        Version = 1 << 2,
-        Signed = 1 << 3,
-        Unknown4 = 1 << 4, // TODO(gibbed): Monster Hunter: Wilds
+        public uint Tag;
+        public byte TypeCode;
+        public byte Version;
 
-        // flags that don't appear to exist yet, for completion
-        Unknown5 = 1 << 5,
-        Unknown6 = 1 << 6,
-        Unknown7 = 1 << 7,
-        Unknown8 = 1 << 8,
-        Unknown9 = 1 << 9,
-        Unknown10 = 1 << 10,
-        Unknown11 = 1 << 11,
-        Unknown12 = 1 << 12,
-        Unknown13 = 1 << 13,
-        Unknown14 = 1 << 14,
-        Unknown15 = 1 << 15,
+        internal static VersionHeader Read(ReadOnlySpan<byte> span, ref int index, Endian endian)
+        {
+            VersionHeader instance;
+            instance.Tag = span.ReadValueU32(ref index, endian);
+            instance.TypeCode = span.ReadValueU8(ref index);
+            instance.Version = span.ReadValueU8(ref index);
+            return instance;
+        }
 
-        Known = Extended | Blocks | Version | Signed | Unknown4,
+        internal static void Write(VersionHeader instance, IBufferWriter<byte> writer, Endian endian)
+        {
+            writer.WriteValueU32(instance.Tag, endian);
+            writer.WriteValueU8(instance.TypeCode);
+            writer.WriteValueU8(instance.Version);
+        }
+
+        internal void Write(IBufferWriter<byte> writer, Endian endian)
+        {
+            Write(this, writer, endian);
+        }
     }
 }

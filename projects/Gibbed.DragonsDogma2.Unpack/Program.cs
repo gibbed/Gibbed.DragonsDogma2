@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+﻿/* Copyright (c) 2025 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -118,6 +118,10 @@ namespace Gibbed.DragonsDogma2.Unpack
             {
                 PackageFile package = new();
                 package.Deserialize(input);
+
+                var sortedByOffset = package.Resources.OrderBy(r => r.DataOffset).ToArray();
+                var noUnknownFlags = package.Resources.Where(r => r.UnknownFlags == 0).ToArray();
+                var hasUnknownFlags = package.Resources.Where(r => r.UnknownFlags != 0).ToArray();
 
                 var endian = package.Endian;
 

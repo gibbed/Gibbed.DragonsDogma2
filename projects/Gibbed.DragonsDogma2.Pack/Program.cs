@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+﻿/* Copyright (c) 2025 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -41,14 +41,12 @@ namespace Gibbed.DragonsDogma2.Pack
         private static void Main(string[] args)
         {
             bool compress = false;
-            bool encryptResourceHeaders = false;
             bool verbose = false;
             bool showHelp = false;
 
             OptionSet options = new()
             {
                 { "c|compress", "compress resources", v => compress = v != null },
-                { "e|encrypt", "encrypt resource headers", v => encryptResourceHeaders = v != null },
                 { "v|verbose", "be verbose", v => verbose = v != null },
                 { "h|help", "show this message and exit", v => showHelp = v != null },
             };
@@ -167,8 +165,9 @@ namespace Gibbed.DragonsDogma2.Pack
                 output.Position = PackageFile.EstimateHeaderSize(
                     pendingEntries.Count,
                     false,
+                    false,
                     0,
-                    encryptResourceHeaders);
+                    false);
 
                 PackageFile package = new()
                 {
