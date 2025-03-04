@@ -35,18 +35,22 @@ namespace Gibbed.DragonsDogma2.FileFormats.Packages
         public long DataSizeCompressed;
         public long DataSizeUncompressed;
 
-        // 31- 0 ???????? ????cccc ???765?4 ?321ssss
+        public const ulong ValidFlags = 0b00000000_00001111_00011101_01111111;
+        public const ulong KnownFlags = 0b00000000_00001111_00000000_00001111;
+
+        // 31- 0 ???????? ????cccc ???76s?4 ?321xxxx
         // 63-32 ???????? ???????? ???????? ????????
         // c = crypto scheme
-        // s = compression scheme
+        // x = compression scheme
+        // s = maybe is streamed (ie textures)?
         // # = unknown
         public ulong RawFlags;
 
         public uint DataHash;
         public uint UnknownHash;
 
-        public readonly ulong InvalidFlags => this.RawFlags & 0xFFFFFFFF_FFF0_E280ul;
-        public readonly ulong UnknownFlags => (this.RawFlags & ~this.InvalidFlags) & ~(0x00000000_000F_000Ful);
+        public readonly ulong InvalidFlags => this.RawFlags & ~ValidFlags;
+        public readonly ulong UnknownFlags => (this.RawFlags & ValidFlags) & ~KnownFlags;
 
         public CompressionScheme CompressionScheme
         {
